@@ -14,21 +14,24 @@ namespace src.Robot_factory.Service
             name = "RobotIII";
         }
 
-        public void GetInstructions()
+        public Dictionary<string, int> GetPieces()
         {
-            throw new NotImplementedException();
-        }
-
-        public List<string> GetPieces()
-        {
-            List<string> pieces = new List<string>();
-
-            pieces.Add("HeartIII");
-            pieces.Add("GeneratorIII");
-            pieces.Add("GripperIII");
-            pieces.Add("WheelIII");
+            Dictionary<string, int> pieces = new Dictionary<string, int>
+            {
+                { "HeartIII", 1 },
+                { "GeneratorIII", 1 },
+                { "GripperIII", 1 },
+                { "WheelIII", 1 }
+            };
 
             return pieces;
+        }
+
+        public void AssemblyRule()
+        {
+            Console.WriteLine("ASSEMBLE A1 HeartIII GeneratorIII");
+            Console.WriteLine("ASSEMBLE A1 GripperIII");
+            Console.WriteLine("ASSEMBLE A3 [A1,GripperIII] WheelIII");
         }
     }
 }

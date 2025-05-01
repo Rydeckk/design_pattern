@@ -9,7 +9,8 @@ namespace src.Robot_factory.Service
     public interface Robot
     {
         string name { get; set; }
-        List<string> GetPieces();
-        void GetInstructions();
+        Dictionary<string, int>  GetPieces();
+
+        void AssemblyRule();
     }
 }

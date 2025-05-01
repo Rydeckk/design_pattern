@@ -48,33 +48,27 @@ namespace src.Robot_factory.Service
                 string robotName = robot.Key;
                 int quantity = robot.Value;
 
-                var pieces = new List<string>();
-                switch (robotName)
-                {
-                    case "RobotI":
-                        pieces = robotI.GetPieces();
-                        break;
-                    case "RobotII":
-                        pieces = robotII.GetPieces();
-                        break;
-                    case "RobotIII":
-                        pieces = robotIII.GetPieces();
-                        break;
-                }
+                Dictionary<string,int> pieces = robotName switch
+                    {
+                        "RobotI" => robotI.GetPieces(),
+                        "RobotII" => robotII.GetPieces(),
+                        "RobotIII" => robotIII.GetPieces(),
+                        _ => new Dictionary<string,int>()
+                    };
 
                 Console.WriteLine($"\n{quantity} {robotName} : \n");
 
                 foreach (var piece in pieces)
                 {
-                    Console.WriteLine($" {quantity} {piece}");
+                    Console.WriteLine($" {piece.Value} {piece.Key}");
 
-                    if (robotParts.ContainsKey(piece))
+                    if (robotParts.ContainsKey(piece.Key))
                     {
-                        robotParts[piece] += quantity;
+                        robotParts[piece.Key] += piece.Value;
                     }
                     else
                     {
-                        robotParts[piece] = quantity;
+                        robotParts[piece.Key] = piece.Value;
                     }
                 }
             }
