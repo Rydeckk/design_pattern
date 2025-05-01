@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using src.Robot_factory.Service;
 
@@ -18,14 +19,19 @@ namespace src.Robot_factory.Controller
 
         public void Execute(string command, string[] args)
         {
+            var robotQuantities = new Dictionary<string, int>();
             switch (command.ToUpper())
             {
                 case "STOCKS":
                     inventory.DisplayInventory();
                     break;
                 case "NEEDED_STOCKS":
-                    var robotQuantities = ProcessArgs(args);
+                    robotQuantities = ProcessArgs(args);
                     inventory.GetNeededStocks(robotQuantities);
+                    break;
+                case "INSTRUCTIONS":
+                    robotQuantities = ProcessArgs(args);
+                    Instruction.GenerateAssemblyInstructions(robotQuantities);
                     break;
                 default:
                     Console.WriteLine("Unknown command.");

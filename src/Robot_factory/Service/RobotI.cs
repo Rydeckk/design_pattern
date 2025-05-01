@@ -14,26 +14,24 @@ namespace src.Robot_factory.Service
             name = "RobotI";
         }
 
-        public void GetInstructions()
+        public Dictionary<string, int> GetPieces()
         {
-            throw new NotImplementedException();
-        }
-
-        public List<string> GetPieces()
-        {
-            List<string> pieces = new List<string>();
-
-            pieces.Add("HeartI");
-            pieces.Add("GeneratorI");
-            pieces.Add("GripperI");
-            pieces.Add("WheelI");
+            Dictionary<string, int> pieces = new Dictionary<string, int>
+            {
+                { "HeartI", 1 },
+                { "GeneratorI", 1 },
+                { "GripperI", 1 },
+                { "WheelI", 1 }
+            };
 
             return pieces;
         }
 
-        public static implicit operator RobotI(RobotIII v)
+        public void AssemblyRule()
         {
-            throw new NotImplementedException();
+            Console.WriteLine("ASSEMBLE A1 HeartI GeneratorI");
+            Console.WriteLine("ASSEMBLE A1 GripperI");
+            Console.WriteLine("ASSEMBLE A3 [A1,GripperI] WheelI");
         }
     }
 }
