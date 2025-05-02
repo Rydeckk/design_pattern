@@ -20,23 +20,43 @@ namespace src.Robot_factory.Controller
         public void Execute(string command, string[] args)
         {
             var robotQuantities = new Dictionary<string, int>();
+
+            if (command.ToUpper() != "STOCKS")
+            {
+                try
+                {
+                    robotQuantities = ProcessArgs(args);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"ERROR {ex.Message}");
+                    return;
+                }
+            }
+
             switch (command.ToUpper())
             {
                 case "STOCKS":
-                    inventory.DisplayInventory();
+                    process_stocks();
                     break;
                 case "NEEDED_STOCKS":
-                    robotQuantities = ProcessArgs(args);
-                    inventory.GetNeededStocks(robotQuantities);
+                    process_needed_stocks(robotQuantities);
                     break;
                 case "INSTRUCTIONS":
-                    robotQuantities = ProcessArgs(args);
-                    Instruction.GenerateAssemblyInstructions(robotQuantities);
+                    process_instructions(robotQuantities);
+                    break;
+                case "VERIFY":
+                    process_verify(robotQuantities);
                     break;
                 default:
                     Console.WriteLine("Unknown command.");
                     break;
             }
+        }
+
+        private void process_stocks()
+        {
+            this.inventory.DisplayInventory();
         }
 
         private Dictionary<string, int> ProcessArgs(string[] args)
@@ -49,14 +69,12 @@ namespace src.Robot_factory.Controller
                 var parts = arg.Trim().Split(' ');
                 if (parts.Length != 2)
                 {
-                    Console.WriteLine($"Invalid argument: {arg}");
-                    continue;
+                    throw new ArgumentException($"Invalid argument format : {arg}");
                 }
 
                 if (!int.TryParse(parts[0], out int quantity))
                 {
-                    Console.WriteLine($"Invalid quantity: {parts[0]}");
-                    continue;
+                    throw new ArgumentException($"Invalid quantity : {parts[0]}");
                 }
 
                 string robotName = parts[1];
@@ -64,8 +82,7 @@ namespace src.Robot_factory.Controller
                 // Vérification si le robot est valide
                 if (!validRobots.Contains(robotName))
                 {
-                    Console.WriteLine($"Invalid robot: {robotName}");
-                    continue;
+                    throw new ArgumentException($"`{robotName}` is not a recongnized robot");
                 }
 
                 // Ajout ou mise à jour de la quantité dans le dictionnaire
@@ -80,6 +97,28 @@ namespace src.Robot_factory.Controller
             }
 
             return robotQuantities;
+        }
+
+        private void process_needed_stocks(Dictionary<string, int> robotQuantities)
+        {
+            this.inventory.GetNeededStocks(robotQuantities);
+        }
+
+        private void process_instructions(Dictionary<string, int> robotQuantities)
+        {
+            Instruction.GenerateAssemblyInstructions(robotQuantities);
+        }
+
+        private void process_verify(Dictionary<string, int> robotQuantities)
+        {
+            if (Order.CheckOrderAvailable(robotQuantities, inventory))
+            {
+                Console.WriteLine("AVAILABLE");
+            }
+            else
+            {
+                Console.WriteLine("UNAVAILABLE");
+            }
         }
     }
 }

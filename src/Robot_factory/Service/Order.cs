@@ -7,25 +7,35 @@ namespace src.Robot_factory.Service
 {
     public class Order
     {
-        private Dictionary<string, int> orderItems;
-
-        public Order()
+        public static bool CheckOrderAvailable(Dictionary<string, int> robotQuantities, Inventory inventory)
         {
-            orderItems = new Dictionary<string, int>();
-        }
-
-        public void AddItem(string itemName, int quantity)
-        {
-            if (orderItems.ContainsKey(itemName))
+            foreach (var robot in robotQuantities)
             {
-                orderItems[itemName] += quantity;
-            }
-            else
-            {
-                orderItems[itemName] = quantity;
-            }
-        }
+                string robotName = robot.Key;
+                int quantity = robot.Value;
 
+                Dictionary<string, int> pieces = robotName switch
+                    {
+                        "RobotI" => new RobotI().GetPieces(),
+                        "RobotII" => new RobotII().GetPieces(),
+                        "RobotIII" => new RobotIII().GetPieces(),
+                        _ => new Dictionary<string, int>()
+                    };
+
+                foreach (var piece in pieces)
+                {
+                    string pieceName = piece.Key;
+                    int pieceQuantity = piece.Value * quantity;
+
+                    if (!inventory.HasItem(pieceName, pieceQuantity))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
         
     }
 }

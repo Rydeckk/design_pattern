@@ -13,10 +13,18 @@ namespace src.Robot_factory
         {
             // Initialisation du stock
             Inventory inventory = new Inventory();
-            inventory.AddItem("Robot1", 10);
-            inventory.AddItem("Robot2", 5);
-            inventory.AddItem("Piece1", 20);
-            inventory.AddItem("Piece2", 15);
+            inventory.AddItem("RobotI", 2);
+            inventory.AddItem("RobotII", 1);
+            inventory.AddItem("HeartI", 2);
+            inventory.AddItem("HeartII", 1);
+            inventory.AddItem("GeneratorI", 2);
+            inventory.AddItem("GeneratorII", 1);
+            inventory.AddItem("GeneratorIII", 1);
+            inventory.AddItem("GripperII", 3);
+            inventory.AddItem("GripperIII", 2);
+            inventory.AddItem("WheelI", 4);
+            inventory.AddItem("WheelII", 1);
+            inventory.AddItem("WheelIII", 6);
 
             // Initialisation du contrôleur de commandes
             Command command = new Command(inventory);
