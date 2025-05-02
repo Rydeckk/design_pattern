@@ -48,6 +48,9 @@ namespace src.Robot_factory.Controller
                 case "VERIFY":
                     ProcessVerify(robotQuantities);
                     break;
+                case "PRODUCE":
+                    ProcessProduce(robotQuantities);
+                    break;
                 default:
                     Console.WriteLine("Unknown command.");
                     break;
@@ -118,6 +121,24 @@ namespace src.Robot_factory.Controller
             else
             {
                 Console.WriteLine("UNAVAILABLE");
+            }
+        }
+
+        private void ProcessProduce(Dictionary<string, int> robotQuantities)
+        {
+            try {
+                if (Order.CheckOrderAvailable(robotQuantities, inventory))
+                {
+                    this.inventory.RemovePieceInStock(robotQuantities);
+                    Console.WriteLine("STOCK_UPDATED");
+                }
+                else
+                {
+                    throw new Exception("Not enough pieces in stock");
+                }
+            } catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR {ex.Message}");
             }
         }
     }
