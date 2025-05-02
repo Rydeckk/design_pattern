@@ -88,5 +88,38 @@ namespace src.Robot_factory.Service
             }
             return false;
         }
+
+        public void RemovePieceInStock(Dictionary<string, int> robotQuantities)
+        {
+            foreach (var robot in robotQuantities)
+            {
+                string robotName = robot.Key;
+                int quantity = robot.Value;
+
+                Dictionary<string, int> pieces = robotName switch
+                    {
+                        "RobotI" => new RobotI().GetPieces(),
+                        "RobotII" => new RobotII().GetPieces(),
+                        "RobotIII" => new RobotIII().GetPieces(),
+                        _ => new Dictionary<string, int>()
+                    };
+
+                foreach (var piece in pieces)
+                {
+                    string pieceName = piece.Key;
+                    int pieceQuantity = piece.Value * quantity;
+
+                    if (inventory.ContainsKey(pieceName))
+                    {
+                        inventory[pieceName] -= pieceQuantity;
+                        
+                        if (inventory[pieceName] <= 0)
+                        {
+                            inventory.Remove(pieceName);
+                        }
+                    }
+                }
+            }
+        }
     }
 }
