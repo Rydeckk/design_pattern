@@ -27,7 +27,7 @@ namespace src.Robot_factory.Service
                     string pieceName = piece.Key;
                     int pieceQuantity = piece.Value * quantity;
 
-                    if (!inventory.HasItem(pieceName, pieceQuantity))
+                    if (!inventory.HasItemInQuantity(pieceName, pieceQuantity))
                     {
                         return false;
                     }

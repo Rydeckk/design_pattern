@@ -37,16 +37,16 @@ namespace src.Robot_factory.Controller
             switch (command.ToUpper())
             {
                 case "STOCKS":
-                    process_stocks();
+                    ProcessStocks();
                     break;
                 case "NEEDED_STOCKS":
-                    process_needed_stocks(robotQuantities);
+                    ProcessNeededStocks(robotQuantities);
                     break;
                 case "INSTRUCTIONS":
-                    process_instructions(robotQuantities);
+                    ProcessInstructions(robotQuantities);
                     break;
                 case "VERIFY":
-                    process_verify(robotQuantities);
+                    ProcessVerify(robotQuantities);
                     break;
                 default:
                     Console.WriteLine("Unknown command.");
@@ -54,7 +54,7 @@ namespace src.Robot_factory.Controller
             }
         }
 
-        private void process_stocks()
+        private void ProcessStocks()
         {
             this.inventory.DisplayInventory();
         }
@@ -99,17 +99,17 @@ namespace src.Robot_factory.Controller
             return robotQuantities;
         }
 
-        private void process_needed_stocks(Dictionary<string, int> robotQuantities)
+        private void ProcessNeededStocks(Dictionary<string, int> robotQuantities)
         {
             this.inventory.GetNeededStocks(robotQuantities);
         }
 
-        private void process_instructions(Dictionary<string, int> robotQuantities)
+        private void ProcessInstructions(Dictionary<string, int> robotQuantities)
         {
             Instruction.GenerateAssemblyInstructions(robotQuantities);
         }
 
-        private void process_verify(Dictionary<string, int> robotQuantities)
+        private void ProcessVerify(Dictionary<string, int> robotQuantities)
         {
             if (Order.CheckOrderAvailable(robotQuantities, inventory))
             {

@@ -80,7 +80,7 @@ namespace src.Robot_factory.Service
             }
         }
 
-        public bool HasItem(string itemName, int quantity)
+        public bool HasItemInQuantity(string itemName, int quantity)
         {
             if (inventory.ContainsKey(itemName))
             {
