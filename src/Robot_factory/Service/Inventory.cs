@@ -79,5 +79,14 @@ namespace src.Robot_factory.Service
                 Console.WriteLine($" {part.Value} {part.Key}");
             }
         }
+
+        public bool HasItemInQuantity(string itemName, int quantity)
+        {
+            if (inventory.ContainsKey(itemName))
+            {
+                return inventory[itemName] >= quantity;
+            }
+            return false;
+        }
     }
 }
