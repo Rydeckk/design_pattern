@@ -60,15 +60,18 @@ namespace src.Robot_factory.Service
 
                 foreach (var piece in pieces)
                 {
-                    Console.WriteLine($" {piece.Value} {piece.Key}");
+                    string pieceName = piece.Key;
+                    int pieceQuantity = piece.Value * quantity;
+                    
+                    Console.WriteLine($" {pieceQuantity} {pieceName}");
 
                     if (robotParts.ContainsKey(piece.Key))
                     {
-                        robotParts[piece.Key] += piece.Value;
+                        robotParts[pieceName] += pieceQuantity;
                     }
                     else
                     {
-                        robotParts[piece.Key] = piece.Value;
+                        robotParts[pieceName] = pieceQuantity;
                     }
                 }
             }
