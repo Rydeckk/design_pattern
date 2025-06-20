@@ -130,7 +130,7 @@ public class Command(Inventory inventory, TemplateManager templateManager)
 
     private void ProcessVerify(Dictionary<string, int> robotQuantities)
     {
-        Console.WriteLine(EnhancedOrder.CheckOrderAvailable(robotQuantities, inventory, templateManager)
+        Console.WriteLine(Order.CheckOrderAvailable(robotQuantities, inventory, templateManager)
             ? "AVAILABLE"
             : "UNAVAILABLE");
     }
@@ -139,7 +139,7 @@ public class Command(Inventory inventory, TemplateManager templateManager)
     {
         try
         {
-            if (EnhancedOrder.CheckOrderAvailable(robotQuantities, inventory, templateManager))
+            if (Order.CheckOrderAvailable(robotQuantities, inventory, templateManager))
             {
                 inventory.RemovePieceInStock(robotQuantities, templateManager);
                 Console.WriteLine("STOCK_UPDATED");
