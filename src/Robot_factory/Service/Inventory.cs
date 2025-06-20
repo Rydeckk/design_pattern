@@ -1,127 +1,99 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using src.Robot_factory.Core.Entities;
+using src.Robot_factory.Pattern.Templates;
 
-namespace src.Robot_factory.Service
+namespace src.Robot_factory.Service;
+
+public class Inventory
 {
-    public class Inventory
+    private readonly Dictionary<string, int> _inventory = new();
+
+    public void AddItem(string itemName, int quantity)
     {
-        private Dictionary<string, int> inventory;
+        if (!_inventory.TryAdd(itemName, quantity)) _inventory[itemName] += quantity;
+    }
 
-        public Inventory()
-        {
-            inventory = new Dictionary<string, int>();
-        }
+    public void DisplayInventory()
+    {
+        Console.WriteLine("Current Inventory:");
+        foreach (var item in _inventory) Console.WriteLine($"{item.Value} {item.Key}");
+    }
 
-        public void AddItem(string itemName, int quantity)
+    public void GetNeededStocks(Dictionary<string, int> robotQuantities, TemplateManager templateManager = null)
+    {
+        var robotI = new RobotI();
+        var robotII = new RobotII();
+        var robotIII = new RobotIII();
+
+        var robotParts = new Dictionary<string, int>();
+
+        foreach (var (robotName, quantity) in robotQuantities)
         {
-            if (inventory.ContainsKey(itemName))
+            Dictionary<string, int> pieces;
+            
+            if (templateManager != null && templateManager.TemplateExists(robotName))
             {
-                inventory[itemName] += quantity;
+                pieces = templateManager.GetTemplate(robotName);
             }
             else
             {
-                inventory[itemName] = quantity;
-            }
-        }
-
-        public void DisplayInventory()
-        {
-            Console.WriteLine("Current Inventory:");
-            foreach (var item in inventory)
-            {
-                Console.WriteLine($"{item.Value} {item.Key}");
-            }
-        }
-
-        public void GetNeededStocks(Dictionary<string, int> robotQuantities)
-        {
-            var robotI = new RobotI();
-            var robotII = new RobotII();
-            var robotIII = new RobotIII();
-
-            Dictionary<string, int> robotParts = new Dictionary<string, int>();
-
-            foreach (var robot in robotQuantities)
-            {
-                string robotName = robot.Key;
-                int quantity = robot.Value;
-
-                Dictionary<string,int> pieces = robotName switch
-                    {
-                        "RobotI" => robotI.GetPieces(),
-                        "RobotII" => robotII.GetPieces(),
-                        "RobotIII" => robotIII.GetPieces(),
-                        _ => new Dictionary<string,int>()
-                    };
-
-                Console.WriteLine($"\n{quantity} {robotName} : \n");
-
-                foreach (var piece in pieces)
+                pieces = robotName switch
                 {
-                    string pieceName = piece.Key;
-                    int pieceQuantity = piece.Value * quantity;
-                    
-                    Console.WriteLine($" {pieceQuantity} {pieceName}");
-
-                    if (robotParts.ContainsKey(piece.Key))
-                    {
-                        robotParts[pieceName] += pieceQuantity;
-                    }
-                    else
-                    {
-                        robotParts[pieceName] = pieceQuantity;
-                    }
-                }
+                    "RobotI" => robotI.GetPieces(),
+                    "RobotII" => robotII.GetPieces(),
+                    "RobotIII" => robotIII.GetPieces(),
+                    _ => new Dictionary<string, int>()
+                };
             }
 
-            Console.WriteLine("\nTotal : \n");
-            foreach (var part in robotParts)
+            Console.WriteLine($"\n{quantity} {robotName} : \n");
+
+            foreach (var (pieceName, value) in pieces)
             {
-                Console.WriteLine($" {part.Value} {part.Key}");
+                var pieceQuantity = value * quantity;
+
+                Console.WriteLine($" {pieceQuantity} {pieceName}");
+
+                if (!robotParts.TryAdd(pieceName, pieceQuantity)) robotParts[pieceName] += pieceQuantity;
             }
         }
 
-        public bool HasItemInQuantity(string itemName, int quantity)
+        Console.WriteLine("\nTotal : \n");
+        foreach (var part in robotParts) Console.WriteLine($" {part.Value} {part.Key}");
+    }
+
+    public bool HasItemInQuantity(string itemName, int quantity)
+    {
+        if (_inventory.TryGetValue(itemName, out var value)) return value >= quantity;
+        return false;
+    }
+
+    public void RemovePieceInStock(Dictionary<string, int> robotQuantities, TemplateManager templateManager = null)
+    {
+        foreach (var (robotName, quantity) in robotQuantities)
         {
-            if (inventory.ContainsKey(itemName))
-            {
-                return inventory[itemName] >= quantity;
-            }
-            return false;
-        }
+            Dictionary<string, int> pieces;
 
-        public void RemovePieceInStock(Dictionary<string, int> robotQuantities)
-        {
-            foreach (var robot in robotQuantities)
-            {
-                string robotName = robot.Key;
-                int quantity = robot.Value;
-
-                Dictionary<string, int> pieces = robotName switch
-                    {
-                        "RobotI" => new RobotI().GetPieces(),
-                        "RobotII" => new RobotII().GetPieces(),
-                        "RobotIII" => new RobotIII().GetPieces(),
-                        _ => new Dictionary<string, int>()
-                    };
-
-                foreach (var piece in pieces)
+            if (templateManager != null && templateManager.TemplateExists(robotName))
+                pieces = templateManager.GetTemplate(robotName);
+            else
+                pieces = robotName switch
                 {
-                    string pieceName = piece.Key;
-                    int pieceQuantity = piece.Value * quantity;
+                    "RobotI" => new RobotI().GetPieces(),
+                    "RobotII" => new RobotII().GetPieces(),
+                    "RobotIII" => new RobotIII().GetPieces(),
+                    _ => new Dictionary<string, int>()
+                };
 
-                    if (inventory.ContainsKey(pieceName))
-                    {
-                        inventory[pieceName] -= pieceQuantity;
-                        
-                        if (inventory[pieceName] <= 0)
-                        {
-                            inventory.Remove(pieceName);
-                        }
-                    }
-                }
+            foreach (var (pieceName, value) in pieces)
+            {
+                var pieceQuantity = value * quantity;
+
+                if (!_inventory.ContainsKey(pieceName)) continue;
+                _inventory[pieceName] -= pieceQuantity;
+
+                if (_inventory[pieceName] <= 0) _inventory.Remove(pieceName);
             }
         }
     }
