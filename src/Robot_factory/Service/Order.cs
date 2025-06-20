@@ -1,41 +1,38 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using src.Robot_factory.Core.Entities;
+using src.Robot_factory.Pattern.Templates;
 
-namespace src.Robot_factory.Service
+namespace src.Robot_factory.Service;
+
+public abstract class Order
 {
-    public class Order
+    public static bool CheckOrderAvailable(Dictionary<string, int> robotQuantities, Inventory inventory,
+        TemplateManager templateManager = null)
     {
-        public static bool CheckOrderAvailable(Dictionary<string, int> robotQuantities, Inventory inventory)
+        foreach (var (robotName, quantity) in robotQuantities)
         {
-            foreach (var robot in robotQuantities)
-            {
-                string robotName = robot.Key;
-                int quantity = robot.Value;
+            Dictionary<string, int> pieces;
 
-                Dictionary<string, int> pieces = robotName switch
-                    {
-                        "RobotI" => new RobotI().GetPieces(),
-                        "RobotII" => new RobotII().GetPieces(),
-                        "RobotIII" => new RobotIII().GetPieces(),
-                        _ => new Dictionary<string, int>()
-                    };
-
-                foreach (var piece in pieces)
+            if (templateManager != null && templateManager.TemplateExists(robotName))
+                pieces = templateManager.GetTemplate(robotName);
+            else
+                pieces = robotName switch
                 {
-                    string pieceName = piece.Key;
-                    int pieceQuantity = piece.Value * quantity;
+                    "RobotI" => new RobotI().GetPieces(),
+                    "RobotII" => new RobotII().GetPieces(),
+                    "RobotIII" => new RobotIII().GetPieces(),
+                    _ => new Dictionary<string, int>()
+                };
 
-                    if (!inventory.HasItemInQuantity(pieceName, pieceQuantity))
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
+            if ((from piece in pieces
+                    let pieceName = piece.Key
+                    let pieceQuantity = piece.Value * quantity
+                    where !inventory.HasItemInQuantity(pieceName, pieceQuantity)
+                    select pieceName).Any())
+                return false;
         }
-        
+
+        return true;
     }
 }
