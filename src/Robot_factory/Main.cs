@@ -52,8 +52,10 @@ public abstract class RobotFactory
         inventory.AddItem("System_SD1", 2);
         inventory.AddItem("System_SI1", 4);
 
+        var order = new Order();
+
         // Initialisation du contrôleur de commandes
-        var command = new Command(inventory, templateManager);
+        var command = new Command(inventory, order, templateManager);
 
         while (true)
         {
@@ -64,15 +66,18 @@ public abstract class RobotFactory
             var parts = input.Split(' ');
             var commandName = parts[0].ToUpper();
             var argsString = string.Join(' ', parts.Skip(1));
-            var commandArgs =
-                // Pour ADD_TEMPLATE, on passe tout le reste comme un seul argument
-                commandName == "ADD_TEMPLATE"
-                    ? [argsString]
-                    :
-                    // Pour les autres commandes, on découpe sur les virgules
-                    argsString.Split(',');
+            var commandArgs = ProcessCommandArgs(commandName, argsString);
 
             command.Execute(commandName, commandArgs);
         }
+    }
+
+    private static string[] ProcessCommandArgs(string commandName, string argsString)
+    {
+        if (commandName == "ADD_TEMPLATE") return [argsString];
+
+        if (commandName == "SEND") return argsString.Split(",");
+
+        return argsString.Split(',');
     }
 }

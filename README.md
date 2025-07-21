@@ -18,6 +18,9 @@ Ce projet implémente une usine de fabrication de robots en utilisant des concep
 - **Templates personnalisés** : Création de nouveaux types de robots via la commande ADD_TEMPLATE
 - **Architecture extensible** : Implémentation de 3 design patterns pour une meilleure maintenabilité
 
+### Nouvelles Fonctionnalités Release 3.0
+- **Gestion de commandes** : Ajout du module de Gestion de commandes
+
 ## Robots disponibles
 
 ### Robots Release 1.0
@@ -75,7 +78,13 @@ Crée un nouveau template de robot personnalisé.
 
 **Validation :** Le template est automatiquement validé selon les règles de compatibilité des catégories.
 
-### 7. `EXIT`
+### 7. `ORDER`
+Renvoie un uuid si la commande est valide
+
+**Exemple :**
+`ORDER 2 RobotI, 1 RobotII, 1 RobotIII`
+
+### 8. `EXIT`
 Quitte l'application.
 
 ## Design Patterns Implémentés

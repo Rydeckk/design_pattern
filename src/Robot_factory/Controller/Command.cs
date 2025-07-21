@@ -6,7 +6,7 @@ using src.Robot_factory.Service;
 
 namespace src.Robot_factory.Controller;
 
-public class Command(Inventory inventory, TemplateManager templateManager)
+public class Command(Inventory inventory, Order order, TemplateManager templateManager)
 {
     private readonly List<string> _validRobots = ["RobotI", "RobotII", "RobotIII", "XM-1", "RD-1", "WI-1"];
 
@@ -15,10 +15,13 @@ public class Command(Inventory inventory, TemplateManager templateManager)
         var robotQuantities = new Dictionary<string, int>();
 
         if (!command.Equals("STOCKS", StringComparison.CurrentCultureIgnoreCase) &&
-            !command.Equals("ADD_TEMPLATE", StringComparison.CurrentCultureIgnoreCase))
+            !command.Equals("ADD_TEMPLATE", StringComparison.CurrentCultureIgnoreCase) &&
+            !command.Equals("LIST_ORDER", StringComparison.CurrentCultureIgnoreCase))
             try
             {
-                robotQuantities = ProcessArgs(args);
+                robotQuantities = command.Equals("SEND", StringComparison.CurrentCultureIgnoreCase) ?
+                ProcessArgs([.. args.Skip(1)]) :
+                ProcessArgs(args);
             }
             catch (Exception ex)
             {
@@ -45,6 +48,16 @@ public class Command(Inventory inventory, TemplateManager templateManager)
                 break;
             case "ADD_TEMPLATE":
                 ProcessAddTemplate(args);
+                break;
+            case "ORDER":
+                ProcessOrder(robotQuantities);
+                break;
+            case "SEND":
+                var orderId = args[0].Trim();
+                ProcessSendOrder(orderId, robotQuantities);
+                break;
+            case "LIST_ORDER":
+                ProcessRemainingOrders();
                 break;
             default:
                 Console.WriteLine("Unknown command.");
@@ -153,5 +166,34 @@ public class Command(Inventory inventory, TemplateManager templateManager)
         {
             Console.WriteLine($"ERROR {ex.Message}");
         }
+    }
+
+    private void ProcessOrder(Dictionary<string, int> robotQuantities)
+    {
+        try
+        {
+            if (Order.CheckOrderAvailable(robotQuantities, inventory, templateManager))
+            {
+                order.MakeOrder(robotQuantities);
+            }
+            else
+            {
+                throw new Exception("Not enough robots in stock");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ERROR {ex.Message}");
+        }
+    }
+
+    private void ProcessSendOrder(string orderId, Dictionary<string, int> robotQuantities)
+    {
+        order.SendOrder(orderId, robotQuantities, inventory);
+    }
+
+    private void ProcessRemainingOrders()
+    {
+        order.RemainingOrders();
     }
 }

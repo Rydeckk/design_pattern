@@ -14,6 +14,11 @@ public class Inventory
         if (!_inventory.TryAdd(itemName, quantity)) _inventory[itemName] += quantity;
     }
 
+    public int GetItemQuantity(string itemName)
+    {
+        return _inventory.TryGetValue(itemName, out int value) ? value : 0;
+    }
+
     public void DisplayInventory()
     {
         Console.WriteLine("Current Inventory:");
@@ -31,7 +36,7 @@ public class Inventory
         foreach (var (robotName, quantity) in robotQuantities)
         {
             Dictionary<string, int> pieces;
-            
+
             if (templateManager != null && templateManager.TemplateExists(robotName))
             {
                 pieces = templateManager.GetTemplate(robotName);
@@ -95,6 +100,15 @@ public class Inventory
 
                 if (_inventory[pieceName] <= 0) _inventory.Remove(pieceName);
             }
+        }
+    }
+
+    public void RemoveRobotInStock(Dictionary<string, int> robotQuantities)
+    {
+        foreach (var (robotName, quantity) in robotQuantities)
+        {
+            if (!_inventory.ContainsKey(robotName)) continue;
+            _inventory[robotName] -= Math.Max(0, quantity);
         }
     }
 }
