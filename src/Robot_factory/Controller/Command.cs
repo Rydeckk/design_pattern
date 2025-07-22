@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using src.Robot_factory.Pattern.Templates;
 using src.Robot_factory.Service;
@@ -10,13 +11,17 @@ public class Command(Inventory inventory, Order order, TemplateManager templateM
 {
     private readonly List<string> _validRobots = ["RobotI", "RobotII", "RobotIII", "XM-1", "RD-1", "WI-1"];
 
+    private readonly List<string> _validInventoryItems = ["RobotI", "RobotII", "RobotIII", "XM-1", "RD-1", "WI-1"];
+
     public void Execute(string command, string[] args)
     {
         var robotQuantities = new Dictionary<string, int>();
 
         if (!command.Equals("STOCKS", StringComparison.CurrentCultureIgnoreCase) &&
             !command.Equals("ADD_TEMPLATE", StringComparison.CurrentCultureIgnoreCase) &&
-            !command.Equals("LIST_ORDER", StringComparison.CurrentCultureIgnoreCase))
+            !command.Equals("LIST_ORDER", StringComparison.CurrentCultureIgnoreCase) &&
+            !command.Equals("RECEIVE", StringComparison.CurrentCultureIgnoreCase) &&
+            !command.Equals("IMPORT", StringComparison.CurrentCultureIgnoreCase))
             try
             {
                 robotQuantities = command.Equals("SEND", StringComparison.CurrentCultureIgnoreCase) ?
@@ -59,6 +64,14 @@ public class Command(Inventory inventory, Order order, TemplateManager templateM
             case "LIST_ORDER":
                 ProcessRemainingOrders();
                 break;
+            case "RECEIVE":
+                var inventoryQuantities = ProcessArgsInventory(args);
+                ProcessReceive(inventoryQuantities);
+                break;
+            case "IMPORT":
+                var importPath = args[0].Trim();
+                ProcessImport(importPath);
+                break;
             default:
                 Console.WriteLine("Unknown command.");
                 break;
@@ -94,6 +107,29 @@ public class Command(Inventory inventory, Order order, TemplateManager templateM
         }
 
         return robotQuantities;
+    }
+
+    private Dictionary<string, int> ProcessArgsInventory(string[] args)
+    {
+        var inventoryQuantities = new Dictionary<string, int>();
+
+        foreach (var arg in args)
+        {
+            var parts = arg.Trim().Split(' ');
+            if (parts.Length != 2) throw new ArgumentException($"Invalid argument format : {arg}");
+
+            if (!int.TryParse(parts[0], out var quantity))
+                throw new ArgumentException($"Invalid quantity : {parts[0]}");
+
+            var itemtName = parts[1];
+
+            if (!_validInventoryItems.Contains(itemtName) && !templateManager.TemplateExists(itemtName))
+                throw new ArgumentException($"`{itemtName}` is not a recognized inventory item");
+
+            if (!inventoryQuantities.TryAdd(itemtName, quantity)) inventoryQuantities[itemtName] += quantity;
+        }
+
+        return inventoryQuantities;
     }
 
     private void ProcessNeededStocks(Dictionary<string, int> robotQuantities)
@@ -195,5 +231,40 @@ public class Command(Inventory inventory, Order order, TemplateManager templateM
     private void ProcessRemainingOrders()
     {
         order.RemainingOrders();
+    }
+
+    private void ProcessReceive(Dictionary<string, int> inventoryQuantities)
+    {
+        foreach (var (itemName, quantity) in inventoryQuantities)
+        {
+            inventory.AddItem(itemName, quantity);
+        }
+    }
+
+    private void ProcessImport(string importPath)
+    {
+        string path = Path.Combine(Directory.GetCurrentDirectory(), "Robot_factory", "Files", importPath);
+        if (!File.Exists(path))
+        {
+            Console.WriteLine($"ERROR: file '{path}' was not found");
+        }
+        else
+        {
+            Console.WriteLine($"IMPORTED: {importPath}");
+
+            var instructions = FileService.ImportInstructionsFromFile(path);
+
+            foreach (var instruction in instructions)
+            {
+                if (string.IsNullOrEmpty(instruction) || instruction.Equals("EXIT", StringComparison.CurrentCultureIgnoreCase)) break;
+
+                var parts = instruction.Split(' ');
+                var commandName = parts[0].ToUpper();
+                var argsString = string.Join(' ', parts.Skip(1));
+                var commandArgs = CommandService.ProcessCommandArgs(commandName, argsString);
+
+                Execute(commandName, commandArgs);
+            }
+        }
     }
 }

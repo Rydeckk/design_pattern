@@ -66,18 +66,9 @@ public abstract class RobotFactory
             var parts = input.Split(' ');
             var commandName = parts[0].ToUpper();
             var argsString = string.Join(' ', parts.Skip(1));
-            var commandArgs = ProcessCommandArgs(commandName, argsString);
+            var commandArgs = CommandService.ProcessCommandArgs(commandName, argsString);
 
             command.Execute(commandName, commandArgs);
         }
-    }
-
-    private static string[] ProcessCommandArgs(string commandName, string argsString)
-    {
-        if (commandName == "ADD_TEMPLATE") return [argsString];
-
-        if (commandName == "SEND") return argsString.Split(",");
-
-        return argsString.Split(',');
     }
 }

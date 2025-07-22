@@ -1,0 +1,5 @@
+<Instructions>
+    <Instruction>STOCKS</Instruction>
+    <Instruction>RECEIVE 1 RobotI, 1 RobotII</Instruction>
+    <Instruction>STOCKS</Instruction>
+</Instructions>
