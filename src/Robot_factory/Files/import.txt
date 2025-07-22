@@ -1,0 +1,3 @@
+STOCKS
+RECEIVE 1 RobotI, 1 RobotII
+STOCKS

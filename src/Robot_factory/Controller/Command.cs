@@ -1,24 +1,33 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using src.Robot_factory.Pattern.Templates;
 using src.Robot_factory.Service;
 
 namespace src.Robot_factory.Controller;
 
-public class Command(Inventory inventory, TemplateManager templateManager)
+public class Command(Inventory inventory, Order order, TemplateManager templateManager)
 {
     private readonly List<string> _validRobots = ["RobotI", "RobotII", "RobotIII", "XM-1", "RD-1", "WI-1"];
 
-    public void Execute(string command, string[] args)
+    protected List<string> _outputLines = [];
+
+    public void Execute(string command, string[] args, string input)
     {
         var robotQuantities = new Dictionary<string, int>();
 
-        if (!command.Equals("STOCKS", StringComparison.CurrentCultureIgnoreCase) &&
-            !command.Equals("ADD_TEMPLATE", StringComparison.CurrentCultureIgnoreCase))
+        string[] validCommands = ["STOCKS", "ADD_TEMPLATE", "LIST_ORDER", "RECEIVE", "IMPORT", "EXPORT"];
+
+        bool isInvalidCommand = !validCommands.Any(c => c.Equals(command, StringComparison.CurrentCultureIgnoreCase));
+
+        if (isInvalidCommand)
             try
             {
-                robotQuantities = ProcessArgs(args);
+                robotQuantities = command.Equals("SEND", StringComparison.CurrentCultureIgnoreCase) ?
+                ProcessArgs([.. args.Skip(1)]) :
+                ProcessArgs(args);
             }
             catch (Exception ex)
             {
@@ -46,10 +55,38 @@ public class Command(Inventory inventory, TemplateManager templateManager)
             case "ADD_TEMPLATE":
                 ProcessAddTemplate(args);
                 break;
+            case "ORDER":
+                ProcessOrder(robotQuantities);
+                break;
+            case "SEND":
+                var orderId = args[0].Trim();
+                ProcessSendOrder(orderId, robotQuantities);
+                break;
+            case "LIST_ORDER":
+                ProcessRemainingOrders();
+                break;
+            case "RECEIVE":
+                var inventoryQuantities = ProcessArgsInventory(args);
+                ProcessReceive(inventoryQuantities);
+                break;
+            case "IMPORT":
+                var importPath = args[0].Trim();
+                ProcessImport(importPath);
+                break;
+            case "EXPORT":
+                var exportPath = args[0].Trim();
+                ProcessOutput(exportPath);
+                break;
             default:
                 Console.WriteLine("Unknown command.");
                 break;
         }
+
+        if (!command.Equals("EXPORT", StringComparison.CurrentCultureIgnoreCase))
+        {
+            _outputLines.Add(input.ToUpper());
+        }
+
     }
 
     private void ProcessStocks()
@@ -81,6 +118,29 @@ public class Command(Inventory inventory, TemplateManager templateManager)
         }
 
         return robotQuantities;
+    }
+
+    private Dictionary<string, int> ProcessArgsInventory(string[] args)
+    {
+        var inventoryQuantities = new Dictionary<string, int>();
+
+        foreach (var arg in args)
+        {
+            var parts = arg.Trim().Split(' ');
+            if (parts.Length != 2) throw new ArgumentException($"Invalid argument format : {arg}");
+
+            if (!int.TryParse(parts[0], out var quantity))
+                throw new ArgumentException($"Invalid quantity : {parts[0]}");
+
+            var itemtName = parts[1];
+
+            if (!inventory.Contains(itemtName) && !templateManager.TemplateExists(itemtName))
+                throw new ArgumentException($"`{itemtName}` is not a recognized inventory item");
+
+            if (!inventoryQuantities.TryAdd(itemtName, quantity)) inventoryQuantities[itemtName] += quantity;
+        }
+
+        return inventoryQuantities;
     }
 
     private void ProcessNeededStocks(Dictionary<string, int> robotQuantities)
@@ -153,5 +213,76 @@ public class Command(Inventory inventory, TemplateManager templateManager)
         {
             Console.WriteLine($"ERROR {ex.Message}");
         }
+    }
+
+    private void ProcessOrder(Dictionary<string, int> robotQuantities)
+    {
+        try
+        {
+            if (Order.CheckOrderAvailable(robotQuantities, inventory, templateManager))
+            {
+                order.MakeOrder(robotQuantities);
+            }
+            else
+            {
+                throw new Exception("Not enough robots in stock");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ERROR {ex.Message}");
+        }
+    }
+
+    private void ProcessSendOrder(string orderId, Dictionary<string, int> robotQuantities)
+    {
+        order.SendOrder(orderId, robotQuantities, inventory);
+    }
+
+    private void ProcessRemainingOrders()
+    {
+        order.RemainingOrders();
+    }
+
+    private void ProcessReceive(Dictionary<string, int> inventoryQuantities)
+    {
+        foreach (var (itemName, quantity) in inventoryQuantities)
+        {
+            inventory.AddItem(itemName, quantity);
+        }
+    }
+
+    private void ProcessImport(string importPath)
+    {
+        string path = Path.Combine(Directory.GetCurrentDirectory(), "Robot_factory", "Files", importPath);
+        if (!File.Exists(path))
+        {
+            Console.WriteLine($"ERROR: file '{path}' was not found");
+        }
+        else
+        {
+            Console.WriteLine($"IMPORTED: {importPath}");
+
+            var instructions = FileService.ImportInstructionsFromFile(path);
+
+            foreach (var instruction in instructions)
+            {
+                if (string.IsNullOrEmpty(instruction) || instruction.Equals("EXIT", StringComparison.CurrentCultureIgnoreCase)) break;
+
+                var parts = instruction.Split(' ');
+                var commandName = parts[0].ToUpper();
+                var argsString = string.Join(' ', parts.Skip(1));
+                var commandArgs = CommandService.ProcessCommandArgs(commandName, argsString);
+
+                Execute(commandName, commandArgs, instruction);
+            }
+        }
+    }
+
+    private void ProcessOutput(string exportPath)
+    {
+        FileService.ExportOutputToFile(exportPath, _outputLines);
+        Console.WriteLine("EXPORTED");
+        _outputLines = [];
     }
 }
