@@ -15,4 +15,8 @@ public class FlatFileProcessor : InstructionFileProcessor
         return [.. content.Split('\n', StringSplitOptions.RemoveEmptyEntries).Select(line => line.Trim())];
     }
 
+    protected override string FormatOutput(List<string> lines)
+    {
+        return string.Join(Environment.NewLine, lines);
+    }
 }

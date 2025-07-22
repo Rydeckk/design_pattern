@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using src.Robot_factory.Pattern.Templates;
@@ -11,17 +12,17 @@ public class Command(Inventory inventory, Order order, TemplateManager templateM
 {
     private readonly List<string> _validRobots = ["RobotI", "RobotII", "RobotIII", "XM-1", "RD-1", "WI-1"];
 
-    private readonly List<string> _validInventoryItems = ["RobotI", "RobotII", "RobotIII", "XM-1", "RD-1", "WI-1"];
+    protected List<string> _outputLines = [];
 
-    public void Execute(string command, string[] args)
+    public void Execute(string command, string[] args, string input)
     {
         var robotQuantities = new Dictionary<string, int>();
 
-        if (!command.Equals("STOCKS", StringComparison.CurrentCultureIgnoreCase) &&
-            !command.Equals("ADD_TEMPLATE", StringComparison.CurrentCultureIgnoreCase) &&
-            !command.Equals("LIST_ORDER", StringComparison.CurrentCultureIgnoreCase) &&
-            !command.Equals("RECEIVE", StringComparison.CurrentCultureIgnoreCase) &&
-            !command.Equals("IMPORT", StringComparison.CurrentCultureIgnoreCase))
+        string[] validCommands = ["STOCKS", "ADD_TEMPLATE", "LIST_ORDER", "RECEIVE", "IMPORT", "EXPORT"];
+
+        bool isInvalidCommand = !validCommands.Any(c => c.Equals(command, StringComparison.CurrentCultureIgnoreCase));
+
+        if (isInvalidCommand)
             try
             {
                 robotQuantities = command.Equals("SEND", StringComparison.CurrentCultureIgnoreCase) ?
@@ -72,10 +73,20 @@ public class Command(Inventory inventory, Order order, TemplateManager templateM
                 var importPath = args[0].Trim();
                 ProcessImport(importPath);
                 break;
+            case "EXPORT":
+                var exportPath = args[0].Trim();
+                ProcessOutput(exportPath);
+                break;
             default:
                 Console.WriteLine("Unknown command.");
                 break;
         }
+
+        if (!command.Equals("EXPORT", StringComparison.CurrentCultureIgnoreCase))
+        {
+            _outputLines.Add(input.ToUpper());
+        }
+
     }
 
     private void ProcessStocks()
@@ -123,7 +134,7 @@ public class Command(Inventory inventory, Order order, TemplateManager templateM
 
             var itemtName = parts[1];
 
-            if (!_validInventoryItems.Contains(itemtName) && !templateManager.TemplateExists(itemtName))
+            if (!inventory.Contains(itemtName) && !templateManager.TemplateExists(itemtName))
                 throw new ArgumentException($"`{itemtName}` is not a recognized inventory item");
 
             if (!inventoryQuantities.TryAdd(itemtName, quantity)) inventoryQuantities[itemtName] += quantity;
@@ -263,8 +274,15 @@ public class Command(Inventory inventory, Order order, TemplateManager templateM
                 var argsString = string.Join(' ', parts.Skip(1));
                 var commandArgs = CommandService.ProcessCommandArgs(commandName, argsString);
 
-                Execute(commandName, commandArgs);
+                Execute(commandName, commandArgs, instruction);
             }
         }
+    }
+
+    private void ProcessOutput(string exportPath)
+    {
+        FileService.ExportOutputToFile(exportPath, _outputLines);
+        Console.WriteLine("EXPORTED");
+        _outputLines = [];
     }
 }

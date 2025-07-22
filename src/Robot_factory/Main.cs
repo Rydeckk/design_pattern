@@ -68,7 +68,7 @@ public abstract class RobotFactory
             var argsString = string.Join(' ', parts.Skip(1));
             var commandArgs = CommandService.ProcessCommandArgs(commandName, argsString);
 
-            command.Execute(commandName, commandArgs);
+            command.Execute(commandName, commandArgs, input);
         }
     }
 }

@@ -16,4 +16,11 @@ public class XmlFileProcessor : InstructionFileProcessor
         return [.. doc.Descendants("Instruction").Select(e => e.Value.Trim())];
     }
 
+    protected override string FormatOutput(List<string> lines)
+    {
+        var doc = new XDocument(new XElement("Instructions",
+            lines.Select(line => new XElement("Instruction", line))
+        ));
+        return doc.ToString();
+    }
 }

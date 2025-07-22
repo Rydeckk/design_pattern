@@ -14,4 +14,8 @@ public class JsonFileProcessor : InstructionFileProcessor
         return JsonSerializer.Deserialize<List<string>>(content) ?? [];
     }
 
+    protected override string FormatOutput(List<string> lines)
+    {
+        return JsonSerializer.Serialize(lines, new JsonSerializerOptions { WriteIndented = true });
+    }
 }

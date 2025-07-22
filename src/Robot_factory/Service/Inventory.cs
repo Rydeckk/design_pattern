@@ -19,6 +19,11 @@ public class Inventory
         return _inventory.TryGetValue(itemName, out int value) ? value : 0;
     }
 
+    public bool Contains(string itemName)
+    {
+        return _inventory.ContainsKey(itemName);
+    }
+
     public void DisplayInventory()
     {
         Console.WriteLine("Current Inventory:");
